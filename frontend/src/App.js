@@ -146,7 +146,6 @@ function App() {
     setGuestCount("");
     setCheckInDate(undefined);
     setCheckOutDate(undefined);
-    setSelectedFeatures([]);
     setPriceRange([0, 10000]);
   };
 
