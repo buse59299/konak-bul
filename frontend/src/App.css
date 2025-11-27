@@ -179,6 +179,191 @@
   transform: translateY(-2px);
 }
 
+/* Filters Panel */
+.filters-panel {
+  background: linear-gradient(135deg, rgba(26, 26, 46, 0.98) 0%, rgba(22, 33, 62, 0.98) 100%);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  padding: 2.5rem 1.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.filters-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.filters-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.filters-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.8rem;
+  color: #d4af37;
+  font-weight: 600;
+}
+
+.clear-filters-button {
+  color: #999 !important;
+  transition: all 0.3s ease;
+}
+
+.clear-filters-button:hover {
+  color: #d4af37 !important;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.filter-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.filter-label {
+  font-size: 0.95rem;
+  color: #c9c9c9;
+  font-weight: 500;
+}
+
+/* Property Type Pills */
+.property-type-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.property-pill {
+  padding: 0.5rem 1.25rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: #c9c9c9;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 20px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.property-pill:hover {
+  background: rgba(212, 175, 55, 0.1);
+  border-color: rgba(212, 175, 55, 0.4);
+}
+
+.property-pill.active {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: #d4af37;
+  color: #d4af37;
+}
+
+/* Filter Inputs */
+.filter-select, .filter-input {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(212, 175, 55, 0.2) !important;
+  color: #e8e8e8 !important;
+  border-radius: 8px !important;
+  transition: all 0.3s ease;
+}
+
+.filter-select:hover, .filter-input:hover {
+  border-color: rgba(212, 175, 55, 0.4) !important;
+}
+
+.filter-select:focus, .filter-input:focus {
+  border-color: #d4af37 !important;
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1);
+}
+
+/* Date Picker */
+.date-picker-button {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(212, 175, 55, 0.2) !important;
+  color: #c9c9c9 !important;
+  justify-content: flex-start !important;
+  padding: 0.75rem 1rem !important;
+  border-radius: 8px !important;
+  transition: all 0.3s ease;
+}
+
+.date-picker-button:hover {
+  border-color: rgba(212, 175, 55, 0.4) !important;
+  color: #e8e8e8 !important;
+}
+
+.date-picker-content {
+  background: rgba(26, 26, 46, 0.98) !important;
+  border: 1px solid rgba(212, 175, 55, 0.3) !important;
+  backdrop-filter: blur(10px);
+}
+
+/* Price Slider */
+.price-slider {
+  margin-top: 1rem;
+}
+
+/* Features Grid */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.feature-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.feature-label {
+  font-size: 0.9rem;
+  color: #c9c9c9;
+  cursor: pointer;
+}
+
+/* Filters Footer */
+.filters-footer {
+  display: flex;
+  justify-content: center;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(212, 175, 55, 0.1);
+}
+
+.manual-search-button {
+  padding: 1rem 3rem !important;
+  font-size: 1.1rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #d4af37 0%, #b8941f 100%) !important;
+  color: #1a1a2e !important;
+  border: none;
+  border-radius: 50px !important;
+  box-shadow: 0 8px 24px rgba(212, 175, 55, 0.3);
+  transition: all 0.3s ease;
+}
+
+.manual-search-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(212, 175, 55, 0.4);
+  background: linear-gradient(135deg, #e0bb44 0%, #c9a225 100%) !important;
+}
+
+.manual-search-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Results Section */
 .results-section {
   max-width: 1400px;
