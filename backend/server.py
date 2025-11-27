@@ -63,6 +63,8 @@ class ParsedFilters(BaseModel):
     guest_count: Optional[int] = None
     property_type: Optional[str] = None
     features: List[str] = []
+    check_in_date: Optional[str] = None  # Format: "YYYY-MM-DD" or "DD MMM" like "2 Eylül"
+    check_out_date: Optional[str] = None
     raw_query: str = ""
 
 class SearchRequest(BaseModel):
