@@ -41,10 +41,7 @@ const PROPERTY_TYPES = [
   { value: "pansiyon", label: "Pansiyon" }
 ];
 
-const FEATURES = [
-  "havuzlu", "denize sıfır", "spa", "jakuzi", "şömine",
-  "WiFi", "balkon", "kahvaltı dahil", "klimalı", "otopark"
-];
+// Features removed - users should use AI search for specific features
 
 function App() {
   // AI Search states
