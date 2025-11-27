@@ -472,15 +472,22 @@ function App() {
                 
                 <CardFooter>
                   {result.url && result.url !== "#" && (
-                    <Button
-                      data-testid={`result-detail-button-${index}`}
-                      variant="outline"
-                      className="detail-button"
-                      onClick={() => window.open(result.url, "_blank")}
+                    <a 
+                      href={result.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{ width: '100%' }}
                     >
-                      <ExternalLink size={16} className="mr-2" />
-                      Detay
-                    </Button>
+                      <Button
+                        data-testid={`result-detail-button-${index}`}
+                        variant="outline"
+                        className="detail-button"
+                        style={{ width: '100%' }}
+                      >
+                        <ExternalLink size={16} className="mr-2" />
+                        Detay
+                      </Button>
+                    </a>
                   )}
                 </CardFooter>
               </Card>
