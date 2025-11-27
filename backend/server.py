@@ -109,6 +109,10 @@ class AIService:
             - guest_count: misafir sayısı
             - property_type: konaklama tipi (otel, villa, apart, bungalov, resort, butik otel, pansiyon)
             - features: özellikler listesi (havuzlu, denize sıfır, spa, jakuzi, şömine, WiFi, balkon, kahvaltı dahil)
+            - check_in_date: giriş tarihi (örn: "2 Eylül", "15 Haziran", "2025-09-02")
+            - check_out_date: çıkış tarihi (örn: "5 Eylül", "20 Haziran", "2025-09-05")
+            
+            TARİHLER ÖNEMLİ: Kullanıcı tarih belirtirse mutlaka çıkar!
             
             SADECE JSON formatında cevap ver, başka metin ekleme.
             Örnek:
@@ -119,7 +123,9 @@ class AIService:
               "price_max": null,
               "guest_count": 4,
               "property_type": "villa",
-              "features": ["havuzlu", "denize sıfır"]
+              "features": ["havuzlu", "denize sıfır"],
+              "check_in_date": "2 Eylül",
+              "check_out_date": "5 Eylül"
             }"""
         ).with_model("anthropic", "claude-4-sonnet-20250514")
     
