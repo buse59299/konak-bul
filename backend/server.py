@@ -169,6 +169,8 @@ class AIService:
                 guest_count=parsed_data.get('guest_count'),
                 property_type=parsed_data.get('property_type'),
                 features=parsed_data.get('features', []),
+                check_in_date=parsed_data.get('check_in_date'),
+                check_out_date=parsed_data.get('check_out_date'),
                 raw_query=query
             )
             
