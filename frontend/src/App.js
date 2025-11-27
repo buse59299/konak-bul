@@ -115,7 +115,7 @@ function App() {
         property_type: selectedPropertyType || null,
         features: [],
         check_in_date: checkInDate ? format(checkInDate, "d MMMM yyyy", { locale: tr }) : null,
-        check_out_date: checkOutDate ? format(checkOutDate, "d MMMM", { locale: tr }) : null,
+        check_out_date: checkOutDate ? format(checkOutDate, "d MMMM yyyy", { locale: tr }) : null,
         raw_query: "manual"
       };
 
