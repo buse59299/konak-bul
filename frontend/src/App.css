@@ -288,24 +288,30 @@
 /* Date Picker */
 .date-picker-button {
   width: 100%;
-  background: rgba(255, 255, 255, 0.08) !important;
-  border: 1px solid rgba(212, 175, 55, 0.2) !important;
-  color: #c9c9c9 !important;
+  background: rgba(212, 175, 55, 0.1) !important;
+  border: 2px solid rgba(212, 175, 55, 0.3) !important;
+  color: #e8e8e8 !important;
   justify-content: flex-start !important;
-  padding: 0.75rem 1rem !important;
-  border-radius: 8px !important;
+  padding: 1rem 1.25rem !important;
+  border-radius: 12px !important;
   transition: all 0.3s ease;
+  font-weight: 500;
 }
 
 .date-picker-button:hover {
-  border-color: rgba(212, 175, 55, 0.4) !important;
-  color: #e8e8e8 !important;
+  border-color: #d4af37 !important;
+  background: rgba(212, 175, 55, 0.15) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
 }
 
 .date-picker-content {
-  background: rgba(26, 26, 46, 0.98) !important;
-  border: 1px solid rgba(212, 175, 55, 0.3) !important;
+  background: linear-gradient(135deg, rgba(26, 26, 46, 0.98) 0%, rgba(22, 33, 62, 0.98) 100%) !important;
+  border: 2px solid rgba(212, 175, 55, 0.4) !important;
   backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border-radius: 12px !important;
+  padding: 1rem !important;
 }
 
 /* Price Slider */
