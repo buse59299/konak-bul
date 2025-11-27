@@ -113,8 +113,8 @@ function App() {
         price_max: priceRange[1] || null,
         guest_count: guestCount ? parseInt(guestCount) : null,
         property_type: selectedPropertyType || null,
-        features: selectedFeatures,
-        check_in_date: checkInDate ? format(checkInDate, "d MMMM", { locale: tr }) : null,
+        features: [],
+        check_in_date: checkInDate ? format(checkInDate, "d MMMM yyyy", { locale: tr }) : null,
         check_out_date: checkOutDate ? format(checkOutDate, "d MMMM", { locale: tr }) : null,
         raw_query: "manual"
       };
