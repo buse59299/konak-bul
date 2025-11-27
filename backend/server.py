@@ -82,8 +82,17 @@ class SuggestionsResponse(BaseModel):
 
 class AIService:
     def __init__(self):
-        # Use user's API key if available, else use Emergent LLM key
-        api_key = os.environ.get('ANTHROPIC_API_KEY', os.environ.get('EMERGENT_LLM_KEY'))
+        # Use user's API key if available and valid, else use Emergent LLM key
+        anthropic_key = os.environ.get('ANTHROPIC_API_KEY', '')
+        
+        # Check if it's a placeholder or empty
+        if anthropic_key and anthropic_key != 'your-anthropic-api-key-here':
+            api_key = anthropic_key
+            logger.info("Using user's Anthropic API key")
+        else:
+            api_key = os.environ.get('EMERGENT_LLM_KEY')
+            logger.info("Using Emergent LLM key")
+        
         self.chat = LlmChat(
             api_key=api_key,
             session_id=f"parse-{uuid.uuid4()}",
