@@ -21,9 +21,14 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const CITIES = [
-  "İstanbul", "Antalya", "Bodrum", "Fethiye", "İzmir", 
-  "Kapadokya", "Alaçatı", "Sapanca", "Çeşme", "Kuşadası",
-  "Marmaris", "Alanya", "Side", "Belek", "Göcek"
+  "İstanbul", "Ankara", "İzmir", "Antalya", "Bursa", 
+  "Adana", "Gaziantep", "Konya", "Muğla", "Trabzon",
+  "Alanya", "Bodrum", "Fethiye", "Marmaris", "Kuşadası",
+  "Side", "Belek", "Çeşme", "Alaçatı", "Kaş", "Kalkan",
+  "Göcek", "Sapanca", "Abant", "Uludağ", "Kapadokya",
+  "Pamukkale", "Ayder", "Uzungöl", "Bozcaada", "Gökçeada",
+  "Ayvalık", "Assos", "Olympos", "Çıralı", "Dalyan",
+  "Datça", "Akyaka", "Şirince", "Foça", "Seferihisar"
 ];
 
 const PROPERTY_TYPES = [
