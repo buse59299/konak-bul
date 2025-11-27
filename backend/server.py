@@ -114,17 +114,37 @@ class AIService:
     
     async def parse_query(self, query: str) -> ParsedFilters:
         try:
-            user_message = UserMessage(text=query)
+            logger.info(f"========== AI PARSE ==========")
+            logger.info(f"Input Query: {query}")
+            
+            user_message = UserMessage(text=f"Parse this Turkish query: {query}")
             response = await self.chat.send_message(user_message)
             
-            # Extract JSON from response
-            json_match = re.search(r'\{[^}]+\}', response, re.DOTALL)
+            logger.info(f"AI Response: {response}")
+            
+            # Extract JSON from response - handle markdown code blocks
+            json_text = response.strip()
+            
+            # Remove markdown code blocks if present
+            if '```json' in json_text:
+                json_text = re.search(r'```json\s*(\{.*?\})\s*```', json_text, re.DOTALL)
+                if json_text:
+                    json_text = json_text.group(1)
+            elif '```' in json_text:
+                json_text = re.search(r'```\s*(\{.*?\})\s*```', json_text, re.DOTALL)
+                if json_text:
+                    json_text = json_text.group(1)
+            
+            # Try to find JSON object
+            json_match = re.search(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', str(json_text), re.DOTALL)
             if json_match:
                 parsed_data = json.loads(json_match.group())
             else:
-                parsed_data = json.loads(response)
+                parsed_data = json.loads(json_text)
             
-            return ParsedFilters(
+            logger.info(f"Parsed Data: {parsed_data}")
+            
+            filters = ParsedFilters(
                 city=parsed_data.get('city'),
                 district=parsed_data.get('district'),
                 price_min=parsed_data.get('price_min'),
@@ -134,9 +154,16 @@ class AIService:
                 features=parsed_data.get('features', []),
                 raw_query=query
             )
+            
+            logger.info(f"Filters Created: {filters.model_dump()}")
+            logger.info(f"==============================")
+            
+            return filters
+            
         except Exception as e:
-            logger.error(f"AI parsing error: {str(e)}")
-            # Fallback to basic parsing
+            logger.error(f"AI parsing error: {str(e)}", exc_info=True)
+            # Fallback to basic parsing with raw query
+            logger.warning(f"Using fallback parsing for: {query}")
             return ParsedFilters(raw_query=query)
 
 # =================== WEB SEARCH SERVICE ===================
