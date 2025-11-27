@@ -265,8 +265,30 @@ class WebSearchService:
                     if is_accommodation:
                         # Extract image if available
                         image_url = None
-                        if 'image' in item:
+                        if 'image' in item and item['image']:
                             image_url = item['image']
+                        
+                        # Fallback images based on property type or city
+                        if not image_url:
+                            city_lower = (filters.city or '').lower()
+                            prop_type = (filters.property_type or '').lower()
+                            
+                            if 'villa' in prop_type or 'villa' in title_lower:
+                                image_url = 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&q=80'
+                            elif 'bungalov' in prop_type or 'bungalov' in title_lower:
+                                image_url = 'https://images.unsplash.com/photo-1510798831971-661eb04b3739?w=800&q=80'
+                            elif 'resort' in prop_type or 'resort' in title_lower:
+                                image_url = 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=800&q=80'
+                            elif 'apart' in prop_type or 'apart' in title_lower:
+                                image_url = 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80'
+                            elif 'antalya' in city_lower or 'alanya' in city_lower:
+                                image_url = 'https://images.unsplash.com/photo-1602002418082-a4443e081dd1?w=800&q=80'
+                            elif 'bodrum' in city_lower:
+                                image_url = 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800&q=80'
+                            elif 'istanbul' in city_lower or 'İstanbul' in (filters.city or ''):
+                                image_url = 'https://images.unsplash.com/photo-1541432901042-2d8bd64b4a9b?w=800&q=80'
+                            else:
+                                image_url = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80'
                         
                         # Try to extract price from content
                         price = None
@@ -279,7 +301,7 @@ class WebSearchService:
                             'title': title,
                             'description': content[:250] if content else 'Konaklama detayları için tıklayın',
                             'url': url,
-                            'image': image_url or 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800',
+                            'image': image_url,
                             'price': price,
                             'city': filters.city or '',
                             'district': filters.district or '',
