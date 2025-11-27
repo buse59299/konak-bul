@@ -305,19 +305,29 @@ async def search_accommodations(request: SearchRequest):
     try:
         filters = request.filters
         
+        logger.info(f"========== SEARCH REQUEST ==========")
+        logger.info(f"Filters: {filters.model_dump()}")
+        
         # Try web search first
         web_results = await web_search_service.search(filters)
         
+        logger.info(f"Web search returned {len(web_results)} results")
+        
+        # Only use web results if we actually got some
         if web_results and len(web_results) > 0:
+            logger.info(f"✓ Using WEB results: {len(web_results)} items")
             return SearchResponse(
                 results=web_results,
                 count=len(web_results),
                 source="web"
             )
         
-        # Fallback to local data
-        logger.info("Web search returned no results, using fallback data")
+        # Fallback to local data only if web search returned nothing
+        logger.info("⚠ Web search returned 0 results, using FALLBACK data")
         fallback_results = await fallback_service.search(filters)
+        
+        logger.info(f"Fallback returned {len(fallback_results)} results")
+        logger.info(f"====================================")
         
         return SearchResponse(
             results=fallback_results,
@@ -326,7 +336,7 @@ async def search_accommodations(request: SearchRequest):
         )
         
     except Exception as e:
-        logger.error(f"Search error: {str(e)}")
+        logger.error(f"Search error: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/suggestions", response_model=SuggestionsResponse)
