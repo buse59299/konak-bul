@@ -147,57 +147,101 @@ class WebSearchService:
     
     async def search(self, filters: ParsedFilters) -> List[Dict[str, Any]]:
         try:
-            # Build search query
+            # Build comprehensive search query from filters
             query_parts = []
             
+            # Add location (city + district)
             if filters.city:
                 query_parts.append(filters.city)
             if filters.district:
                 query_parts.append(filters.district)
+            
+            # Add property type if specified
             if filters.property_type:
                 query_parts.append(filters.property_type)
-            else:
-                query_parts.append("otel")
             
-            # Add features
+            # Add up to 2 key features
             if filters.features:
-                query_parts.extend(filters.features[:2])  # Limit to 2 features
+                query_parts.extend(filters.features[:2])
             
-            # Add "konaklama" or "tatil" keyword
-            query_parts.append("konaklama")
+            # Add base keyword
+            query_parts.append("konaklama Turkey")
             
+            # Build final search query
             search_query = " ".join(query_parts)
-            logger.info(f"Tavily search query: {search_query}")
             
-            # Perform Tavily search
+            logger.info(f"========== TAVILY SEARCH ==========")
+            logger.info(f"Parsed Filters: city={filters.city}, district={filters.district}, type={filters.property_type}, features={filters.features}")
+            logger.info(f"Search Query: {search_query}")
+            
+            # Perform Tavily search WITHOUT domain restrictions to get more results
             response = self.tavily_client.search(
                 query=search_query,
                 search_depth="basic",
-                max_results=10,
-                include_domains=["booking.com", "hotels.com", "tatilsepeti.com", "trivago.com.tr", "etstur.com"]
+                max_results=15
             )
+            
+            logger.info(f"Tavily Raw Response: {response}")
             
             results = []
             if response and 'results' in response:
-                for item in response['results']:
-                    # Filter out non-accommodation results
-                    title = item.get('title', '').lower()
-                    if any(keyword in title for keyword in ['otel', 'hotel', 'villa', 'apart', 'resort', 'konaklama', 'tatil']):
-                        results.append({
-                            'title': item.get('title', ''),
-                            'description': item.get('content', '')[:200],
-                            'url': item.get('url', ''),
-                            'image': None,  # Tavily doesn't provide images
-                            'price': None,
+                logger.info(f"Tavily returned {len(response['results'])} total results")
+                
+                # Process ALL results from Tavily
+                for idx, item in enumerate(response['results']):
+                    title = item.get('title', '')
+                    content = item.get('content', '')
+                    url = item.get('url', '')
+                    
+                    logger.info(f"Result {idx}: Title='{title}', URL={url}")
+                    
+                    # More lenient filtering - accept any travel/accommodation related content
+                    title_lower = title.lower()
+                    content_lower = content.lower()
+                    
+                    # Check if it's accommodation related
+                    keywords = ['hotel', 'otel', 'villa', 'apart', 'resort', 'konaklama', 
+                                'tatil', 'booking', 'accommodation', 'stay', 'lodging',
+                                'pension', 'pansiyon', 'bungalov', 'bungalow']
+                    
+                    is_accommodation = any(kw in title_lower or kw in content_lower for kw in keywords)
+                    
+                    if is_accommodation:
+                        # Extract image if available
+                        image_url = None
+                        if 'image' in item:
+                            image_url = item['image']
+                        
+                        # Try to extract price from content
+                        price = None
+                        import re
+                        price_match = re.search(r'(\d+[.,]?\d*)\s*(TL|₺|USD|EUR)', content)
+                        if price_match:
+                            price = f"{price_match.group(1)} {price_match.group(2)}"
+                        
+                        result_item = {
+                            'title': title,
+                            'description': content[:250] if content else 'Konaklama detayları için tıklayın',
+                            'url': url,
+                            'image': image_url or 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800',
+                            'price': price,
                             'city': filters.city or '',
-                            'features': filters.features
-                        })
+                            'district': filters.district or '',
+                            'features': filters.features if filters.features else []
+                        }
+                        
+                        results.append(result_item)
+                        logger.info(f"✓ Added result: {title}")
+                    else:
+                        logger.info(f"✗ Filtered out (not accommodation): {title}")
             
-            logger.info(f"Tavily returned {len(results)} accommodation results")
+            logger.info(f"Final processed results count: {len(results)}")
+            logger.info(f"===================================")
+            
             return results
             
         except Exception as e:
-            logger.error(f"Tavily search error: {str(e)}")
+            logger.error(f"Tavily search error: {str(e)}", exc_info=True)
             return []
 
 # =================== FALLBACK DATA SERVICE ===================
