@@ -54,7 +54,7 @@ function App() {
   const [guestCount, setGuestCount] = useState("");
   const [checkInDate, setCheckInDate] = useState();
   const [checkOutDate, setCheckOutDate] = useState();
-  const [selectedFeatures, setSelectedFeatures] = useState([]);
+  // Features removed
   const [priceRange, setPriceRange] = useState([0, 10000]);
   
   // Results states
