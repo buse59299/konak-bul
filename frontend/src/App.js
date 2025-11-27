@@ -138,13 +138,7 @@ function App() {
     }
   };
 
-  const toggleFeature = (feature) => {
-    setSelectedFeatures(prev => 
-      prev.includes(feature) 
-        ? prev.filter(f => f !== feature)
-        : [...prev, feature]
-    );
-  };
+  // Features removed
 
   const clearFilters = () => {
     setSelectedCity("");
