@@ -380,26 +380,10 @@ function App() {
                   className="price-slider"
                 />
               </div>
-
-              {/* Features */}
-              <div className="filter-group full-width">
-                <Label className="filter-label">Özellikler</Label>
-                <div className="features-grid">
-                  {FEATURES.map((feature) => (
-                    <div key={feature} className="feature-checkbox">
-                      <Checkbox
-                        id={feature}
-                        data-testid={`feature-${feature}`}
-                        checked={selectedFeatures.includes(feature)}
-                        onCheckedChange={() => toggleFeature(feature)}
-                      />
-                      <label htmlFor={feature} className="feature-label">
-                        {feature}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
+            </div>
+            
+            <div className="ai-suggestion-note">
+              <p>💡 <strong>İpucu:</strong> Daha spesifik özellikler (havuzlu, şömineli, denize sıfır vb.) için yukarıdaki <strong>"AI'ya Sor"</strong> özelliğini kullanın.</p>
             </div>
 
             {/* Search Button */}
