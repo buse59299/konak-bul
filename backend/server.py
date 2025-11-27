@@ -210,6 +210,16 @@ class WebSearchService:
             if filters.features:
                 query_parts.extend(filters.features[:2])
             
+            # Add dates if specified
+            if filters.check_in_date and filters.check_out_date:
+                query_parts.append(f"{filters.check_in_date} - {filters.check_out_date}")
+            elif filters.check_in_date:
+                query_parts.append(filters.check_in_date)
+            
+            # Add guest count
+            if filters.guest_count:
+                query_parts.append(f"{filters.guest_count} kişi")
+            
             # Add base keyword
             query_parts.append("konaklama Turkey")
             
