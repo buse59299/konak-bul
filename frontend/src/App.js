@@ -53,9 +53,7 @@ function App() {
   const [checkOutDate, setCheckOutDate] = useState(null);
   const [priceRange, setPriceRange] = useState([0, 10000]);
   
-  // Popover states
-  const [checkInOpen, setCheckInOpen] = useState(false);
-  const [checkOutOpen, setCheckOutOpen] = useState(false);
+  // Removed popover states - using default Popover behavior
   
   // Results states
   const [loading, setLoading] = useState(false);
