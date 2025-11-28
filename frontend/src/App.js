@@ -179,18 +179,7 @@ function App() {
     }
   };
 
-  // Handle date selection - FIX for date picker bug
-  const handleCheckInSelect = (date) => {
-    console.log("Check-in date selected:", date);
-    setCheckInDate(date);
-    setCheckInOpen(false);
-  };
-
-  const handleCheckOutSelect = (date) => {
-    console.log("Check-out date selected:", date);
-    setCheckOutDate(date);
-    setCheckOutOpen(false);
-  };
+  // Date selection handled directly in Calendar onSelect
 
   return (
     <div className="App">
