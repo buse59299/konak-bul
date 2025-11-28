@@ -186,7 +186,136 @@ class AIService:
             logger.warning(f"Using fallback parsing for: {query}")
             return ParsedFilters(raw_query=query)
 
-# =================== WEB SEARCH SERVICE ===================
+# =================== GOOGLE PLACES SERVICE ===================
+
+class GooglePlacesService:
+    def __init__(self):
+        self.gmaps = googlemaps.Client(key=os.environ.get('GOOGLE_PLACES_API_KEY'))
+    
+    async def search(self, filters: ParsedFilters) -> List[Dict[str, Any]]:
+        try:
+            # Build search query
+            query_parts = []
+            
+            # Add property type or default to "hotel"
+            if filters.property_type:
+                type_mapping = {
+                    'otel': 'hotel',
+                    'villa': 'villa',
+                    'apart': 'apartment',
+                    'bungalov': 'bungalow',
+                    'resort': 'resort',
+                    'butik otel': 'boutique hotel',
+                    'pansiyon': 'pension'
+                }
+                query_parts.append(type_mapping.get(filters.property_type, filters.property_type))
+            else:
+                query_parts.append('hotel')
+            
+            # Add location
+            if filters.city:
+                query_parts.append(f"in {filters.city}")
+            
+            if filters.district:
+                query_parts.append(filters.district)
+            
+            # Add features
+            if filters.features:
+                query_parts.extend(filters.features[:2])
+            
+            # Build final query
+            search_query = " ".join(query_parts) + " Turkey"
+            
+            logger.info(f"========== GOOGLE PLACES SEARCH ==========")
+            logger.info(f"Search Query: {search_query}")
+            
+            # Perform Google Places Text Search
+            places_result = self.gmaps.places(
+                query=search_query,
+                language='tr',
+                type='lodging'
+            )
+            
+            results = []
+            if places_result and 'results' in places_result:
+                logger.info(f"Google Places returned {len(places_result['results'])} results")
+                
+                for idx, place in enumerate(places_result['results'][:15]):  # Limit to 15
+                    place_id = place.get('place_id')
+                    
+                    # Get detailed info
+                    details = self.gmaps.place(
+                        place_id=place_id,
+                        fields=['name', 'rating', 'user_ratings_total', 'price_level', 
+                               'photos', 'website', 'formatted_address', 'formatted_phone_number'],
+                        language='tr'
+                    )
+                    
+                    if details and 'result' in details:
+                        detail = details['result']
+                        
+                        # Get photo URL
+                        photo_url = None
+                        if 'photos' in detail and len(detail['photos']) > 0:
+                            photo_reference = detail['photos'][0].get('photo_reference')
+                            if photo_reference:
+                                photo_url = f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photoreference={photo_reference}&key={os.environ.get('GOOGLE_PLACES_API_KEY')}"
+                        
+                        # Fallback image if no photo
+                        if not photo_url:
+                            if filters.property_type and 'villa' in filters.property_type.lower():
+                                photo_url = 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&q=80'
+                            elif filters.property_type and 'bungalov' in filters.property_type.lower():
+                                photo_url = 'https://images.unsplash.com/photo-1510798831971-661eb04b3739?w=800&q=80'
+                            else:
+                                photo_url = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80'
+                        
+                        # Format price
+                        price = None
+                        price_level = detail.get('price_level')
+                        if price_level:
+                            price_map = {
+                                1: "₺ (Ekonomik)",
+                                2: "₺₺ (Orta)",
+                                3: "₺₺₺ (Pahalı)",
+                                4: "₺₺₺₺ (Çok Pahalı)"
+                            }
+                            price = price_map.get(price_level, "Fiyat bilgisi yok")
+                        
+                        # Build description with rating and reviews
+                        rating = detail.get('rating', 0)
+                        reviews = detail.get('user_ratings_total', 0)
+                        description = f"⭐ {rating}/5 ({reviews} yorum)"
+                        
+                        if detail.get('formatted_address'):
+                            description += f" • {detail['formatted_address'][:100]}"
+                        
+                        result_item = {
+                            'title': detail.get('name', 'İsimsiz'),
+                            'description': description,
+                            'url': detail.get('website') or f"https://www.google.com/maps/place/?q=place_id:{place_id}",
+                            'image': photo_url,
+                            'price': price,
+                            'rating': rating,
+                            'reviews': reviews,
+                            'city': filters.city or '',
+                            'district': filters.district or '',
+                            'features': filters.features if filters.features else []
+                        }
+                        
+                        results.append(result_item)
+                        logger.info(f"✓ Added: {detail.get('name')} - {rating}⭐ ({reviews} reviews)")
+            
+            logger.info(f"Final results count: {len(results)}")
+            logger.info(f"==========================================")
+            
+            return results
+            
+        except Exception as e:
+            logger.error(f"Google Places search error: {str(e)}", exc_info=True)
+            return []
+
+# =================== WEB SEARCH SERVICE (FALLBACK) ===================
 
 class WebSearchService:
     def __init__(self):
