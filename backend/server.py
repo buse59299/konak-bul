@@ -490,7 +490,8 @@ class FallbackDataService:
 # =================== API ENDPOINTS ===================
 
 ai_service = AIService()
-web_search_service = WebSearchService()
+google_places_service = GooglePlacesService()
+web_search_service = WebSearchService()  # Fallback
 fallback_service = FallbackDataService()
 
 @api_router.get("/")
