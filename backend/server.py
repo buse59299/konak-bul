@@ -510,29 +510,40 @@ async def parse_query(request: ParseRequest):
 
 @api_router.post("/search", response_model=SearchResponse)
 async def search_accommodations(request: SearchRequest):
-    """Search accommodations using web search, fallback to local data"""
+    """Search accommodations using Google Places API, fallback to Tavily, then local data"""
     try:
         filters = request.filters
         
         logger.info(f"========== SEARCH REQUEST ==========")
         logger.info(f"Filters: {filters.model_dump()}")
         
-        # Try web search first
+        # Try Google Places first
+        google_results = await google_places_service.search(filters)
+        
+        logger.info(f"Google Places returned {len(google_results)} results")
+        
+        if google_results and len(google_results) > 0:
+            logger.info(f"✓ Using GOOGLE PLACES results: {len(google_results)} items")
+            return SearchResponse(
+                results=google_results,
+                count=len(google_results),
+                source="google_places"
+            )
+        
+        # Fallback to Tavily if Google Places returns nothing
+        logger.info("⚠ Google Places returned 0 results, trying Tavily...")
         web_results = await web_search_service.search(filters)
         
-        logger.info(f"Web search returned {len(web_results)} results")
-        
-        # Only use web results if we actually got some
         if web_results and len(web_results) > 0:
-            logger.info(f"✓ Using WEB results: {len(web_results)} items")
+            logger.info(f"✓ Using TAVILY results: {len(web_results)} items")
             return SearchResponse(
                 results=web_results,
                 count=len(web_results),
                 source="web"
             )
         
-        # Fallback to local data only if web search returned nothing
-        logger.info("⚠ Web search returned 0 results, using FALLBACK data")
+        # Final fallback to local data
+        logger.info("⚠ All searches returned 0 results, using FALLBACK data")
         fallback_results = await fallback_service.search(filters)
         
         logger.info(f"Fallback returned {len(fallback_results)} results")
