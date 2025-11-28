@@ -473,7 +473,9 @@ function App() {
               {results.length} Gerçek Konaklama İlanı Bulundu
             </h2>
             <Badge variant="outline" className="source-badge" data-testid="source-badge">
-              {source === "web" ? "🌐 İnternetten Gerçek İlanlar" : "📦 Yerel Verilerden"}
+              {source === "google_places" ? "🔍 Google'dan Gerçek İlanlar" : 
+               source === "web" ? "🌐 İnternetten İlanlar" : 
+               "📦 Yerel Verilerden"}
             </Badge>
           </div>
           
