@@ -372,13 +372,12 @@ function App() {
               {/* Check-in Date - FIXED */}
               <div className="filter-group">
                 <Label className="filter-label">Giriş Tarihi</Label>
-                <Popover open={checkInOpen} onOpenChange={setCheckInOpen}>
+                <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       data-testid="check-in-date-button"
                       variant="outline"
                       className="date-picker-button"
-                      onClick={() => setCheckInOpen(true)}
                     >
                       <CalendarIcon size={16} className="mr-2" />
                       {checkInDate ? format(checkInDate, "d MMMM yyyy", { locale: tr }) : "Tarih seçin"}
@@ -388,7 +387,10 @@ function App() {
                     <Calendar
                       mode="single"
                       selected={checkInDate}
-                      onSelect={handleCheckInSelect}
+                      onSelect={(date) => {
+                        console.log("Check-in date selected:", date);
+                        setCheckInDate(date);
+                      }}
                       locale={tr}
                       disabled={(date) => date < new Date()}
                       initialFocus
@@ -400,13 +402,12 @@ function App() {
               {/* Check-out Date - FIXED */}
               <div className="filter-group">
                 <Label className="filter-label">Çıkış Tarihi</Label>
-                <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
+                <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       data-testid="check-out-date-button"
                       variant="outline"
                       className="date-picker-button"
-                      onClick={() => setCheckOutOpen(true)}
                     >
                       <CalendarIcon size={16} className="mr-2" />
                       {checkOutDate ? format(checkOutDate, "d MMMM yyyy", { locale: tr }) : "Tarih seçin"}
@@ -416,7 +417,10 @@ function App() {
                     <Calendar
                       mode="single"
                       selected={checkOutDate}
-                      onSelect={handleCheckOutSelect}
+                      onSelect={(date) => {
+                        console.log("Check-out date selected:", date);
+                        setCheckOutDate(date);
+                      }}
                       locale={tr}
                       disabled={(date) => date < (checkInDate || new Date())}
                       initialFocus
