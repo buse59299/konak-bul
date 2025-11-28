@@ -11,6 +11,7 @@ import uuid
 from datetime import datetime, timezone
 from emergentintegrations.llm.chat import LlmChat, UserMessage
 from tavily import TavilyClient
+import googlemaps
 import re
 import json
 
