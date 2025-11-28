@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -41,8 +40,6 @@ const PROPERTY_TYPES = [
   { value: "pansiyon", label: "Pansiyon" }
 ];
 
-// Features removed - users should use AI search for specific features
-
 function App() {
   // AI Search states
   const [aiQuery, setAiQuery] = useState("");
@@ -52,10 +49,13 @@ function App() {
   const [selectedCity, setSelectedCity] = useState("");
   const [selectedPropertyType, setSelectedPropertyType] = useState("");
   const [guestCount, setGuestCount] = useState("");
-  const [checkInDate, setCheckInDate] = useState();
-  const [checkOutDate, setCheckOutDate] = useState();
-  // Features removed
+  const [checkInDate, setCheckInDate] = useState(null);
+  const [checkOutDate, setCheckOutDate] = useState(null);
   const [priceRange, setPriceRange] = useState([0, 10000]);
+  
+  // Popover states
+  const [checkInOpen, setCheckInOpen] = useState(false);
+  const [checkOutOpen, setCheckOutOpen] = useState(false);
   
   // Results states
   const [loading, setLoading] = useState(false);
@@ -63,21 +63,37 @@ function App() {
   const [source, setSource] = useState("");
 
   const handleAISearch = async () => {
-    if (!aiQuery.trim()) {
+    const trimmedQuery = aiQuery.trim();
+    
+    // Validate query
+    if (!trimmedQuery) {
       toast.error("Lütfen arama yapabilmek için bir şeyler yazın");
       return;
     }
+    
+    // Check if query is a URL (bug fix)
+    if (trimmedQuery.startsWith('http://') || trimmedQuery.startsWith('https://')) {
+      toast.error("Lütfen URL değil, arama metni girin");
+      return;
+    }
 
+    console.log("AI Search Query:", trimmedQuery);
     setLoading(true);
     setResults([]);
     setSource("");
 
     try {
-      const parseResponse = await axios.post(`${API}/parse`, { query: aiQuery });
+      console.log("Parsing query with AI...");
+      const parseResponse = await axios.post(`${API}/parse`, { query: trimmedQuery });
       const filters = parseResponse.data;
+      console.log("Parsed filters:", filters);
 
+      console.log("Searching with filters...");
       const searchResponse = await axios.post(`${API}/search`, { filters });
       const { results: searchResults, source: dataSource } = searchResponse.data;
+      
+      console.log(`Search complete: ${searchResults.length} results from ${dataSource}`);
+      console.log("First 3 results:", searchResults.slice(0, 3));
 
       setResults(searchResults);
       setSource(dataSource);
@@ -85,7 +101,7 @@ function App() {
       if (searchResults.length === 0) {
         toast.info("Aramanızla eşleşen sonuç bulunamadı. Lütfen farklı kriterler deneyin.");
       } else {
-        toast.success(`${searchResults.length} konaklama bulundu!`);
+        toast.success(`${searchResults.length} gerçek konaklama ilanı bulundu!`);
       }
     } catch (error) {
       console.error("Search error:", error);
@@ -100,6 +116,15 @@ function App() {
       toast.error("Lütfen en az şehir veya konaklama tipi seçin");
       return;
     }
+
+    console.log("Manual Search - Filters:", {
+      city: selectedCity,
+      propertyType: selectedPropertyType,
+      guestCount,
+      checkInDate: checkInDate ? format(checkInDate, "d MMMM yyyy", { locale: tr }) : null,
+      checkOutDate: checkOutDate ? format(checkOutDate, "d MMMM yyyy", { locale: tr }) : null,
+      priceRange
+    });
 
     setLoading(true);
     setResults([]);
@@ -119,16 +144,18 @@ function App() {
         raw_query: "manual"
       };
 
+      console.log("Sending filters to backend:", filters);
       const searchResponse = await axios.post(`${API}/search`, { filters });
       const { results: searchResults, source: dataSource } = searchResponse.data;
 
+      console.log(`Manual search complete: ${searchResults.length} results from ${dataSource}`);
       setResults(searchResults);
       setSource(dataSource);
 
       if (searchResults.length === 0) {
         toast.info("Aramanızla eşleşen sonuç bulunamadı.");
       } else {
-        toast.success(`${searchResults.length} konaklama bulundu!`);
+        toast.success(`${searchResults.length} gerçek konaklama ilanı bulundu!`);
       }
     } catch (error) {
       console.error("Search error:", error);
@@ -138,14 +165,13 @@ function App() {
     }
   };
 
-  // Features removed
-
   const clearFilters = () => {
+    console.log("Clearing all filters");
     setSelectedCity("");
     setSelectedPropertyType("");
     setGuestCount("");
-    setCheckInDate(undefined);
-    setCheckOutDate(undefined);
+    setCheckInDate(null);
+    setCheckOutDate(null);
     setPriceRange([0, 10000]);
   };
 
@@ -153,6 +179,19 @@ function App() {
     if (e.key === "Enter") {
       handleAISearch();
     }
+  };
+
+  // Handle date selection - FIX for date picker bug
+  const handleCheckInSelect = (date) => {
+    console.log("Check-in date selected:", date);
+    setCheckInDate(date);
+    setCheckInOpen(false);
+  };
+
+  const handleCheckOutSelect = (date) => {
+    console.log("Check-out date selected:", date);
+    setCheckOutDate(date);
+    setCheckOutOpen(false);
   };
 
   return (
@@ -170,7 +209,7 @@ function App() {
             Türkiye'nin en akıllı konaklama arama motoru
           </p>
           
-          {/* AI Search Bar */}
+          {/* AI Search Bar - FIXED controlled input */}
           <div className="search-container" data-testid="search-container">
             <div className="search-bar">
               <Search className="search-icon" />
@@ -179,10 +218,15 @@ function App() {
                 type="text"
                 placeholder="Nereye, kaç kişi, hangi tarihlerde, hangi özelliklerde konaklama arıyorsunuz?"
                 value={aiQuery}
-                onChange={(e) => setAiQuery(e.target.value)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  console.log("Input changed:", value);
+                  setAiQuery(value);
+                }}
                 onKeyPress={handleKeyPress}
                 disabled={loading}
                 className="search-input"
+                autoComplete="off"
               />
             </div>
             <Button
@@ -272,9 +316,12 @@ function App() {
                     <button
                       key={type.value}
                       data-testid={`property-type-${type.value}`}
-                      onClick={() => setSelectedPropertyType(
-                        selectedPropertyType === type.value ? "" : type.value
-                      )}
+                      onClick={() => {
+                        console.log("Property type clicked:", type.value);
+                        setSelectedPropertyType(
+                          selectedPropertyType === type.value ? "" : type.value
+                        );
+                      }}
                       className={`property-pill ${selectedPropertyType === type.value ? 'active' : ''}`}
                     >
                       {type.label}
@@ -286,7 +333,13 @@ function App() {
               {/* City */}
               <div className="filter-group">
                 <Label className="filter-label">Şehir</Label>
-                <Select value={selectedCity} onValueChange={setSelectedCity}>
+                <Select 
+                  value={selectedCity} 
+                  onValueChange={(value) => {
+                    console.log("City selected:", value);
+                    setSelectedCity(value);
+                  }}
+                >
                   <SelectTrigger data-testid="city-select" className="filter-select">
                     <SelectValue placeholder="Şehir seçin" />
                   </SelectTrigger>
@@ -308,58 +361,65 @@ function App() {
                   max="20"
                   placeholder="Kaç kişi?"
                   value={guestCount}
-                  onChange={(e) => setGuestCount(e.target.value)}
+                  onChange={(e) => {
+                    console.log("Guest count:", e.target.value);
+                    setGuestCount(e.target.value);
+                  }}
                   className="filter-input"
                 />
               </div>
 
-              {/* Check-in Date */}
+              {/* Check-in Date - FIXED */}
               <div className="filter-group">
                 <Label className="filter-label">Giriş Tarihi</Label>
-                <Popover>
+                <Popover open={checkInOpen} onOpenChange={setCheckInOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       data-testid="check-in-date-button"
                       variant="outline"
                       className="date-picker-button"
+                      onClick={() => setCheckInOpen(true)}
                     >
                       <CalendarIcon size={16} className="mr-2" />
                       {checkInDate ? format(checkInDate, "d MMMM yyyy", { locale: tr }) : "Tarih seçin"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="date-picker-content">
+                  <PopoverContent className="date-picker-content" align="start">
                     <Calendar
                       mode="single"
                       selected={checkInDate}
-                      onSelect={setCheckInDate}
+                      onSelect={handleCheckInSelect}
                       locale={tr}
                       disabled={(date) => date < new Date()}
+                      initialFocus
                     />
                   </PopoverContent>
                 </Popover>
               </div>
 
-              {/* Check-out Date */}
+              {/* Check-out Date - FIXED */}
               <div className="filter-group">
                 <Label className="filter-label">Çıkış Tarihi</Label>
-                <Popover>
+                <Popover open={checkOutOpen} onOpenChange={setCheckOutOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       data-testid="check-out-date-button"
                       variant="outline"
                       className="date-picker-button"
+                      onClick={() => setCheckOutOpen(true)}
                     >
                       <CalendarIcon size={16} className="mr-2" />
                       {checkOutDate ? format(checkOutDate, "d MMMM yyyy", { locale: tr }) : "Tarih seçin"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="date-picker-content">
+                  <PopoverContent className="date-picker-content" align="start">
                     <Calendar
                       mode="single"
                       selected={checkOutDate}
-                      onSelect={setCheckOutDate}
+                      onSelect={handleCheckOutSelect}
                       locale={tr}
                       disabled={(date) => date < (checkInDate || new Date())}
+                      initialFocus
                     />
                   </PopoverContent>
                 </Popover>
@@ -373,7 +433,10 @@ function App() {
                 <Slider
                   data-testid="price-slider"
                   value={priceRange}
-                  onValueChange={setPriceRange}
+                  onValueChange={(value) => {
+                    console.log("Price range:", value);
+                    setPriceRange(value);
+                  }}
                   min={0}
                   max={10000}
                   step={500}
@@ -416,10 +479,10 @@ function App() {
         <div className="results-section" data-testid="results-section">
           <div className="results-header">
             <h2 className="results-title" data-testid="results-count">
-              {results.length} Konaklama Bulundu
+              {results.length} Gerçek Konaklama İlanı Bulundu
             </h2>
             <Badge variant="outline" className="source-badge" data-testid="source-badge">
-              {source === "web" ? "Web'den Alındı" : "Yerel Verilerden"}
+              {source === "web" ? "🌐 İnternetten Gerçek İlanlar" : "📦 Yerel Verilerden"}
             </Badge>
           </div>
           
@@ -433,6 +496,10 @@ function App() {
                       alt={result.title}
                       className="card-image"
                       data-testid={`result-image-${index}`}
+                      onError={(e) => {
+                        console.error("Image load error:", result.image);
+                        e.target.src = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80';
+                      }}
                     />
                     {result.price && (
                       <div className="price-badge" data-testid={`result-price-${index}`}>
@@ -476,7 +543,8 @@ function App() {
                       href={result.url} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      style={{ width: '100%' }}
+                      style={{ width: '100%', textDecoration: 'none' }}
+                      onClick={() => console.log("Opening URL:", result.url)}
                     >
                       <Button
                         data-testid={`result-detail-button-${index}`}
@@ -485,7 +553,7 @@ function App() {
                         style={{ width: '100%' }}
                       >
                         <ExternalLink size={16} className="mr-2" />
-                        Detay
+                        Detayları Gör (Gerçek İlan)
                       </Button>
                     </a>
                   )}
@@ -498,7 +566,10 @@ function App() {
       
       {/* Footer */}
       <footer className="app-footer">
-        <p>© 2025 AI Konaklama Asistanı - Claude Sonnet 4 ile güçlendirilmiştir</p>
+        <p>© 2025 AI Konaklama Asistanı - Claude Sonnet 4 + Tavily Web Search ile güçlendirilmiştir</p>
+        <p style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.5rem' }}>
+          ⚠️ Sonuçlar Tavily arama motorundan gerçek web sitelerinden çekilmektedir.
+        </p>
       </footer>
     </div>
   );
