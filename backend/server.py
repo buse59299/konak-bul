@@ -243,11 +243,11 @@ class GooglePlacesService:
                 for idx, place in enumerate(places_result['results'][:15]):  # Limit to 15
                     place_id = place.get('place_id')
                     
-                    # Get detailed info
+                    # Get detailed info - using basic fields to avoid photo issues
                     details = self.gmaps.place(
                         place_id=place_id,
                         fields=['name', 'rating', 'user_ratings_total', 'price_level', 
-                               'photo', 'website', 'formatted_address', 'formatted_phone_number'],
+                               'website', 'formatted_address', 'formatted_phone_number'],
                         language='tr'
                     )
                     
