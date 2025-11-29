@@ -318,9 +318,16 @@ class GooglePlacesService:
                         if detail.get('formatted_address'):
                             description += f" • {detail['formatted_address'][:100]}"
                         
-                        # Always use Google Maps link as primary, website as backup
-                        google_maps_url = f"https://www.google.com/maps/search/?api=1&query={detail.get('name', '').replace(' ', '+')}&query_place_id={place_id}"
+                        # Simple Google Maps link - most reliable format
+                        google_maps_url = f"https://www.google.com/maps/place/?q=place_id:{place_id}"
                         website_url = detail.get('website')
+                        
+                        # Also get coordinates for alternative link
+                        lat = place.get('geometry', {}).get('location', {}).get('lat')
+                        lng = place.get('geometry', {}).get('location', {}).get('lng')
+                        coords_url = None
+                        if lat and lng:
+                            coords_url = f"https://www.google.com/maps?q={lat},{lng}"
                         
                         result_item = {
                             'title': detail.get('name', 'İsimsiz'),
