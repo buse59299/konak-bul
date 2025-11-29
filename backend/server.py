@@ -254,15 +254,12 @@ class GooglePlacesService:
                     if details and 'result' in details:
                         detail = details['result']
                         
-                        # Get photo URL
+                        # Get photo from original place result (not details)
                         photo_url = None
-                        if 'photo' in detail:
-                            # photo field returns a single photo object or list
-                            photos = detail['photo'] if isinstance(detail['photo'], list) else [detail['photo']]
-                            if photos and len(photos) > 0:
-                                photo_reference = photos[0].get('photo_reference')
-                                if photo_reference:
-                                    photo_url = f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photoreference={photo_reference}&key={os.environ.get('GOOGLE_PLACES_API_KEY')}"
+                        if 'photos' in place and len(place['photos']) > 0:
+                            photo_reference = place['photos'][0].get('photo_reference')
+                            if photo_reference:
+                                photo_url = f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photoreference={photo_reference}&key={os.environ.get('GOOGLE_PLACES_API_KEY')}"
                         
                         # Fallback image if no photo
                         if not photo_url:
