@@ -318,10 +318,15 @@ class GooglePlacesService:
                         if detail.get('formatted_address'):
                             description += f" • {detail['formatted_address'][:100]}"
                         
+                        # Always use Google Maps link as primary, website as backup
+                        google_maps_url = f"https://www.google.com/maps/search/?api=1&query={detail.get('name', '').replace(' ', '+')}&query_place_id={place_id}"
+                        website_url = detail.get('website')
+                        
                         result_item = {
                             'title': detail.get('name', 'İsimsiz'),
                             'description': description,
-                            'url': detail.get('website') or f"https://www.google.com/maps/place/?q=place_id:{place_id}",
+                            'url': google_maps_url,  # Primary: Google Maps link (ALWAYS works)
+                            'website': website_url,  # Secondary: Official website
                             'image': photo_url,
                             'price': price,
                             'rating': rating,
