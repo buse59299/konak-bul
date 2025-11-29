@@ -530,14 +530,14 @@ function App() {
                   )}
                 </CardContent>
                 
-                <CardFooter>
+                <CardFooter style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column' }}>
+                  {/* Google Maps Link - Always available */}
                   {result.url && result.url !== "#" && (
                     <a 
                       href={result.url} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       style={{ width: '100%', textDecoration: 'none' }}
-                      onClick={() => console.log("Opening URL:", result.url)}
                     >
                       <Button
                         data-testid={`result-detail-button-${index}`}
@@ -545,8 +545,27 @@ function App() {
                         className="detail-button"
                         style={{ width: '100%' }}
                       >
+                        <MapPin size={16} className="mr-2" />
+                        Google Maps'te Gör
+                      </Button>
+                    </a>
+                  )}
+                  
+                  {/* Official Website - If available */}
+                  {result.website && (
+                    <a 
+                      href={result.website} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{ width: '100%', textDecoration: 'none' }}
+                    >
+                      <Button
+                        data-testid={`result-website-button-${index}`}
+                        className="website-button"
+                        style={{ width: '100%' }}
+                      >
                         <ExternalLink size={16} className="mr-2" />
-                        Detayları Gör (Gerçek İlan)
+                        Resmi Web Sitesi
                       </Button>
                     </a>
                   )}
