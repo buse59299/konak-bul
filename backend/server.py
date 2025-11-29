@@ -247,7 +247,7 @@ class GooglePlacesService:
                     details = self.gmaps.place(
                         place_id=place_id,
                         fields=['name', 'rating', 'user_ratings_total', 'price_level', 
-                               'photos', 'website', 'formatted_address', 'formatted_phone_number'],
+                               'photo', 'website', 'formatted_address', 'formatted_phone_number'],
                         language='tr'
                     )
                     
