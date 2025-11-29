@@ -210,7 +210,7 @@ class GooglePlacesService:
                 }
                 query_parts.append(type_mapping.get(filters.property_type, filters.property_type))
             else:
-                query_parts.append('hotel')
+                query_parts.append('lodging')
             
             # Add location
             if filters.city:
@@ -229,18 +229,46 @@ class GooglePlacesService:
             logger.info(f"========== GOOGLE PLACES SEARCH ==========")
             logger.info(f"Search Query: {search_query}")
             
-            # Perform Google Places Text Search
+            all_places = []
+            
+            # First request
             places_result = self.gmaps.places(
                 query=search_query,
                 language='tr',
                 type='lodging'
             )
             
-            results = []
             if places_result and 'results' in places_result:
-                logger.info(f"Google Places returned {len(places_result['results'])} results")
+                all_places.extend(places_result['results'])
+                logger.info(f"First page: {len(places_result['results'])} results")
                 
-                for idx, place in enumerate(places_result['results'][:15]):  # Limit to 15
+                # Get more results using next_page_token (max 2 more pages)
+                page_count = 1
+                while 'next_page_token' in places_result and page_count < 3:
+                    import time
+                    time.sleep(2)  # Google requires 2 second delay
+                    
+                    try:
+                        places_result = self.gmaps.places(
+                            query=search_query,
+                            language='tr',
+                            type='lodging',
+                            page_token=places_result['next_page_token']
+                        )
+                        
+                        if places_result and 'results' in places_result:
+                            all_places.extend(places_result['results'])
+                            page_count += 1
+                            logger.info(f"Page {page_count}: {len(places_result['results'])} more results")
+                    except Exception as e:
+                        logger.error(f"Pagination error: {str(e)}")
+                        break
+            
+            logger.info(f"Total places collected: {len(all_places)}")
+            
+            results = []
+            if all_places:
+                for idx, place in enumerate(all_places[:50]):  # Max 50 results
                     place_id = place.get('place_id')
                     
                     # Get detailed info - using basic fields to avoid photo issues
