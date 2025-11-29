@@ -332,8 +332,9 @@ class GooglePlacesService:
                         result_item = {
                             'title': detail.get('name', 'İsimsiz'),
                             'description': description,
-                            'url': google_maps_url,  # Primary: Google Maps link (ALWAYS works)
-                            'website': website_url,  # Secondary: Official website
+                            'url': coords_url or google_maps_url,  # Coordinates link first (no API key needed)
+                            'maps_url': google_maps_url,  # Backup Maps link
+                            'website': website_url,  # Official website
                             'image': photo_url,
                             'price': price,
                             'rating': rating,
