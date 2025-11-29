@@ -555,6 +555,24 @@
   box-shadow: 0 4px 8px rgba(59, 130, 246, 0.2);
 }
 
+.website-button {
+  width: 100%;
+  background: #3b82f6 !important;
+  color: #ffffff !important;
+  border: 2px solid #3b82f6 !important;
+  transition: all 0.3s ease;
+  border-radius: 10px !important;
+  font-weight: 600;
+  padding: 0.75rem !important;
+}
+
+.website-button:hover {
+  background: #2563eb !important;
+  border-color: #2563eb !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
 /* Footer */
 .app-footer {
   text-align: center;
