@@ -538,6 +538,7 @@ function App() {
                       target="_blank" 
                       rel="noopener noreferrer"
                       style={{ width: '100%', textDecoration: 'none' }}
+                      onClick={() => console.log("Opening Maps URL:", result.url)}
                     >
                       <Button
                         data-testid={`result-detail-button-${index}`}
@@ -546,7 +547,7 @@ function App() {
                         style={{ width: '100%' }}
                       >
                         <MapPin size={16} className="mr-2" />
-                        Google Maps'te Gör
+                        Haritada Gör & Yol Tarifi
                       </Button>
                     </a>
                   )}
@@ -558,6 +559,7 @@ function App() {
                       target="_blank" 
                       rel="noopener noreferrer"
                       style={{ width: '100%', textDecoration: 'none' }}
+                      onClick={() => console.log("Opening Website:", result.website)}
                     >
                       <Button
                         data-testid={`result-website-button-${index}`}
@@ -565,7 +567,7 @@ function App() {
                         style={{ width: '100%' }}
                       >
                         <ExternalLink size={16} className="mr-2" />
-                        Resmi Web Sitesi
+                        Otelin Web Sitesi
                       </Button>
                     </a>
                   )}
