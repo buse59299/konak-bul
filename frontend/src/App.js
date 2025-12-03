@@ -16,7 +16,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+// EĞER .env DOSYASI YOKSA OTOMATİK OLARAK LOCALHOST:8000 KULLANIR
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || "http://localhost:8000";
 const API = `${BACKEND_URL}/api`;
 
 const CITIES = [
