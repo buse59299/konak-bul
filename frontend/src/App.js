@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Slider } from "@/components/ui/slider";
-import { Loader2, Search, MapPin, DollarSign, ExternalLink, SlidersHorizontal, Calendar as CalendarIcon, X } from "lucide-react";
+import { Loader2, Search, MapPin, Banknote, ExternalLink, SlidersHorizontal, Calendar as CalendarIcon, X } from "lucide-react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { format } from "date-fns";
@@ -60,6 +60,9 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState([]);
   const [source, setSource] = useState("");
+  const [hasSearched, setHasSearched] = useState(false);
+  const [parsedFilters, setParsedFilters] = useState(null);
+  const [displayedQuery, setDisplayedQuery] = useState("");
 
   const handleAISearch = async () => {
     const trimmedQuery = aiQuery.trim();
@@ -87,6 +90,53 @@ function App() {
       const filters = parseResponse.data;
       console.log("Parsed filters:", filters);
 
+      // Parselanmış filtreleri state'e kaydet
+      setParsedFilters(filters);
+      setDisplayedQuery(trimmedQuery);
+      
+      // Manuel filterları parselanmış değerlerle doldur
+      if (filters.city) setSelectedCity(filters.city);
+      if (filters.property_type) setSelectedPropertyType(filters.property_type);
+      if (filters.guest_count) setGuestCount(String(filters.guest_count));
+      
+      // Tarih parsing - String format: "d MMMM yyyy" or "2025-12-04"
+      if (filters.check_in_date && filters.check_in_date !== null && filters.check_in_date !== "") {
+        try {
+          let checkInDate;
+          if (typeof filters.check_in_date === 'string') {
+            // Try to parse different formats
+            checkInDate = new Date(filters.check_in_date);
+          } else {
+            checkInDate = filters.check_in_date;
+          }
+          if (checkInDate && !isNaN(checkInDate.getTime())) {
+            setCheckInDate(checkInDate);
+          }
+        } catch (e) {
+          console.log("Check-in date parse error:", e);
+        }
+      }
+      
+      if (filters.check_out_date && filters.check_out_date !== null && filters.check_out_date !== "") {
+        try {
+          let checkOutDate;
+          if (typeof filters.check_out_date === 'string') {
+            checkOutDate = new Date(filters.check_out_date);
+          } else {
+            checkOutDate = filters.check_out_date;
+          }
+          if (checkOutDate && !isNaN(checkOutDate.getTime())) {
+            setCheckOutDate(checkOutDate);
+          }
+        } catch (e) {
+          console.log("Check-out date parse error:", e);
+        }
+      }
+      
+      if (filters.price_min !== null && filters.price_max !== null) {
+        setPriceRange([filters.price_min || 0, filters.price_max || 10000]);
+      }
+
       console.log("Searching with filters...");
       const searchResponse = await axios.post(`${API}/search`, { filters });
       const { results: searchResults, source: dataSource } = searchResponse.data;
@@ -96,6 +146,7 @@ function App() {
 
       setResults(searchResults);
       setSource(dataSource);
+      setHasSearched(true);
 
       if (searchResults.length === 0) {
         toast.info("Aramanızla eşleşen sonuç bulunamadı. Lütfen farklı kriterler deneyin.");
@@ -150,6 +201,19 @@ function App() {
       console.log(`Manual search complete: ${searchResults.length} results from ${dataSource}`);
       setResults(searchResults);
       setSource(dataSource);
+      setHasSearched(true);
+      
+      // Filtre bilgilerini göster
+      const filterSummary = [];
+      if (selectedCity) filterSummary.push(selectedCity);
+      if (selectedPropertyType) filterSummary.push(selectedPropertyType);
+      if (guestCount) filterSummary.push(`${guestCount} kişi`);
+      if (checkInDate) filterSummary.push(`Giriş: ${format(checkInDate, "d MMM", { locale: tr })}`);
+      if (checkOutDate) filterSummary.push(`Çıkış: ${format(checkOutDate, "d MMM", { locale: tr })}`);
+      if (priceRange[0] > 0 || priceRange[1] < 10000) {
+        filterSummary.push(`${priceRange[0]}-${priceRange[1]} TL`);
+      }
+      setDisplayedQuery(filterSummary.join(" • "));
 
       if (searchResults.length === 0) {
         toast.info("Aramanızla eşleşen sonuç bulunamadı.");
@@ -172,6 +236,10 @@ function App() {
     setCheckInDate(null);
     setCheckOutDate(null);
     setPriceRange([0, 10000]);
+    setResults([]);
+    setHasSearched(false);
+    setDisplayedQuery("");
+    setParsedFilters(null);
   };
 
   const handleKeyPress = (e) => {
@@ -186,7 +254,8 @@ function App() {
     <div className="App">
       <Toaster position="top-center" richColors />
       
-      {/* Header Section */}
+      {/* Header Section - Only show when no search has been made */}
+      {!hasSearched && (
       <div className="hero-section">
         <div className="hero-overlay" />
         <div className="hero-content">
@@ -276,9 +345,360 @@ function App() {
           )}
         </div>
       </div>
+      )}
 
-      {/* Advanced Filters Panel */}
-      {showFilters && (
+      {/* Sidebar Layout - Show when search has been made */}
+      {hasSearched && (
+        <div className="search-layout">
+          {/* Sidebar with search */}
+          <div className="search-sidebar">
+            <div className="sidebar-header">
+              <h2 className="sidebar-title">Arama</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setHasSearched(false);
+                  setResults([]);
+                  setAiQuery("");
+                  setDisplayedQuery("");
+                  setParsedFilters(null);
+                }}
+                className="new-search-button"
+              >
+                <X size={16} className="mr-1" />
+                Yeni Arama
+              </Button>
+            </div>
+            
+            {/* Current Search Criteria */}
+            {displayedQuery && (
+              <div className="sidebar-criteria">
+                <div className="criteria-header">
+                  <span className="criteria-label">Arama Kriteri</span>
+                </div>
+                <div className="criteria-text">{displayedQuery}</div>
+              </div>
+            )}
+
+            {/* AI Search in Sidebar */}
+            <div className="sidebar-search-container">
+              <div className="search-bar">
+                <Search className="search-icon" size={18} />
+                <Input
+                  type="text"
+                  placeholder="Arama kriterlerini değiştir..."
+                  value={aiQuery}
+                  onChange={(e) => setAiQuery(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  disabled={loading}
+                  className="sidebar-search-input"
+                  autoComplete="off"
+                />
+              </div>
+              <Button
+                onClick={handleAISearch}
+                disabled={loading}
+                className="sidebar-search-button"
+                size="sm"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="animate-spin" size={16} />
+                  </>
+                ) : (
+                  "Ara"
+                )}
+              </Button>
+            </div>
+
+            {/* Filter Toggle in Sidebar */}
+            <div className="sidebar-filter-toggle">
+              <Button
+                onClick={() => setShowFilters(!showFilters)}
+                variant="outline"
+                className="sidebar-filter-button"
+                size="sm"
+              >
+                <SlidersHorizontal size={16} className="mr-2" />
+                {showFilters ? "Filtreleri Gizle" : "Filtreler"}
+              </Button>
+            </div>
+
+            {/* Filters in Sidebar */}
+            {showFilters && (
+              <div className="sidebar-filters">
+                <div className="sidebar-filters-header">
+                  <span className="sidebar-filters-title">Filtreler</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearFilters}
+                    className="sidebar-clear-button"
+                  >
+                    Temizle
+                  </Button>
+                </div>
+
+                {/* Property Type */}
+                <div className="sidebar-filter-group">
+                  <Label className="sidebar-filter-label">Konaklama Tipi</Label>
+                  <div className="sidebar-property-pills">
+                    {PROPERTY_TYPES.map((type) => (
+                      <button
+                        key={type.value}
+                        onClick={() => setSelectedPropertyType(
+                          selectedPropertyType === type.value ? "" : type.value
+                        )}
+                        className={`sidebar-property-pill ${selectedPropertyType === type.value ? 'active' : ''}`}
+                      >
+                        {type.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* City */}
+                <div className="sidebar-filter-group">
+                  <Label className="sidebar-filter-label">Şehir</Label>
+                  <Select value={selectedCity} onValueChange={setSelectedCity}>
+                    <SelectTrigger className="sidebar-select">
+                      <SelectValue placeholder="Şehir seçin" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CITIES.map((city) => (
+                        <SelectItem key={city} value={city}>{city}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Guest Count */}
+                <div className="sidebar-filter-group">
+                  <Label className="sidebar-filter-label">Kişi Sayısı</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="20"
+                    placeholder="Kaç kişi?"
+                    value={guestCount}
+                    onChange={(e) => setGuestCount(e.target.value)}
+                    className="sidebar-input"
+                  />
+                </div>
+
+                {/* Check-in Date */}
+                <div className="sidebar-filter-group">
+                  <Label className="sidebar-filter-label">Giriş Tarihi</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="sidebar-date-button">
+                        <CalendarIcon size={14} className="mr-2" />
+                        {checkInDate ? format(checkInDate, "d MMM yyyy", { locale: tr }) : "Tarih seçin"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="date-picker-content" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={checkInDate}
+                        onSelect={setCheckInDate}
+                        locale={tr}
+                        disabled={(date) => date < new Date()}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Check-out Date */}
+                <div className="sidebar-filter-group">
+                  <Label className="sidebar-filter-label">Çıkış Tarihi</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="sidebar-date-button">
+                        <CalendarIcon size={14} className="mr-2" />
+                        {checkOutDate ? format(checkOutDate, "d MMM yyyy", { locale: tr }) : "Tarih seçin"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="date-picker-content" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={checkOutDate}
+                        onSelect={setCheckOutDate}
+                        locale={tr}
+                        disabled={(date) => date < (checkInDate || new Date())}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Price Range */}
+                <div className="sidebar-filter-group">
+                  <Label className="sidebar-filter-label">
+                    Fiyat: {priceRange[0]} - {priceRange[1]} TL
+                  </Label>
+                  <Slider
+                    value={priceRange}
+                    onValueChange={setPriceRange}
+                    min={0}
+                    max={10000}
+                    step={500}
+                    className="sidebar-slider"
+                  />
+                </div>
+
+                {/* Apply Filters Button */}
+                <Button
+                  onClick={handleManualSearch}
+                  disabled={loading}
+                  className="sidebar-apply-button"
+                  size="sm"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="animate-spin mr-2" size={16} />
+                      Aranıyor...
+                    </>
+                  ) : (
+                    <>
+                      <Search size={16} className="mr-2" />
+                      Filtreleri Uygula
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {/* Results Area */}
+          <div className="results-area">
+            {results.length > 0 ? (
+              <div className="results-content">
+                <div className="results-header">
+                  <h2 className="results-title">
+                    {results.length} Konaklama Bulundu
+                  </h2>
+                  <Badge variant="outline" className="source-badge">
+                    {source === "google_places" ? "🔍 Google'dan Gerçek İlanlar" : 
+                     source === "web" ? "🌐 İnternetten İlanlar" : 
+                     "📦 Yerel Verilerden"}
+                  </Badge>
+                </div>
+                
+                <div className="results-grid">
+                  {results.map((result, index) => (
+                    <Card key={index} className="accommodation-card">
+                      {result.image && (
+                        <div className="card-image-container">
+                          <img
+                            src={result.image}
+                            alt={result.title}
+                            className="card-image"
+                            onError={(e) => {
+                              e.target.src = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80';
+                            }}
+                          />
+                          {result.price && (
+                            <div className="price-badge">
+                              <Banknote size={16} />
+                              {result.price}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      
+                      <CardHeader>
+                        <CardTitle className="card-title">
+                          {result.title}
+                        </CardTitle>
+                        <CardDescription className="card-location">
+                          <MapPin size={14} className="inline mr-1" />
+                          {result.city}
+                          {result.district && `, ${result.district}`}
+                        </CardDescription>
+                        {result.rating && (
+                          <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span style={{ color: '#f59e0b', fontSize: '1rem' }}>★</span>
+                            <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1e40af' }}>
+                              {result.rating.toFixed(1)}
+                            </span>
+                            {result.reviews_count && (
+                              <span style={{ fontSize: '0.85rem', color: '#6b7280' }}>
+                                ({result.reviews_count} değerlendirme)
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </CardHeader>
+                      
+                      <CardContent>
+                        <p className="card-description">
+                          {result.description}
+                        </p>
+                        
+                        {result.features && result.features.length > 0 && (
+                          <div className="features-container">
+                            {result.features.slice(0, 6).map((feature, idx) => (
+                              <Badge key={idx} variant="secondary" className="feature-badge">
+                                {feature}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                      
+                      <CardFooter style={{ display: 'flex', gap: '0.5rem', flexDirection: 'column' }}>
+                        {result.url && result.url !== "#" && (
+                          <a 
+                            href={result.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            style={{ width: '100%', textDecoration: 'none' }}
+                          >
+                            <Button
+                              variant="outline"
+                              className="detail-button"
+                              style={{ width: '100%' }}
+                            >
+                              <MapPin size={16} className="mr-2" />
+                              Haritada Gör & Yol Tarifi
+                            </Button>
+                          </a>
+                        )}
+                        
+                        {result.website && (
+                          <a 
+                            href={result.website} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            style={{ width: '100%', textDecoration: 'none' }}
+                          >
+                            <Button
+                              className="website-button"
+                              style={{ width: '100%' }}
+                            >
+                              <ExternalLink size={16} className="mr-2" />
+                              Otelin Web Sitesi
+                            </Button>
+                          </a>
+                        )}
+                      </CardFooter>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="no-results">
+                <p>Arama sonucu bekleniyor...</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Advanced Filters Panel - Only show when not searched */}
+      {!hasSearched && showFilters && (
         <div className="filters-panel" data-testid="filters-panel">
           <div className="filters-container">
             <div className="filters-header">
@@ -466,8 +886,8 @@ function App() {
         </div>
       )}
 
-      {/* Results Section */}
-      {results.length > 0 && (
+      {/* Original Results Section - Only show when not in sidebar mode */}
+      {!hasSearched && results.length > 0 && (
         <div className="results-section" data-testid="results-section">
           <div className="results-header">
             <h2 className="results-title" data-testid="results-count">
@@ -497,7 +917,7 @@ function App() {
                     />
                     {result.price && (
                       <div className="price-badge" data-testid={`result-price-${index}`}>
-                        <DollarSign size={16} />
+                        <Banknote size={16} />
                         {result.price}
                       </div>
                     )}
@@ -513,6 +933,19 @@ function App() {
                     {result.city}
                     {result.district && `, ${result.district}`}
                   </CardDescription>
+                  {result.rating && (
+                    <div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ color: '#f59e0b', fontSize: '1rem' }}>★</span>
+                      <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#1e40af' }}>
+                        {result.rating.toFixed(1)}
+                      </span>
+                      {result.reviews_count && (
+                        <span style={{ fontSize: '0.85rem', color: '#6b7280' }}>
+                          ({result.reviews_count} değerlendirme)
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </CardHeader>
                 
                 <CardContent>
@@ -579,13 +1012,15 @@ function App() {
         </div>
       )}
       
-      {/* Footer */}
+      {/* Footer - Only show when not in sidebar layout */}
+      {!hasSearched && (
       <footer className="app-footer">
         <p>© 2025 AI Konaklama Asistanı - Claude Sonnet 4 + Tavily Web Search ile güçlendirilmiştir</p>
         <p style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.5rem' }}>
           ⚠️ Sonuçlar Tavily arama motorundan gerçek web sitelerinden çekilmektedir.
         </p>
       </footer>
+      )}
     </div>
   );
 }
